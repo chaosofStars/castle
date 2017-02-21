@@ -1,126 +1,58 @@
 package castle;
 
-import java.util.HashMap;
 import java.util.Scanner;
+import Map.Map;
+import handler.Handler;
+import human.Player;
 
 public class Game {
-    private Room currentRoom;
-    private HashMap<String, Handler> handlers = new HashMap<String, Handler>();
-   
-    private class Handler {
-    	public void doCmd(String word){}
-    	public boolean isBye(){return false;}
-    }
-    
-    public Game() 
-    {
-    	handlers.put("go", new Handler() {
-    		public void doCmd(String word) {
-    			goRoom(word);
-    		}
-    	});
-    	handlers.put("bye", new Handler() {
-    		public boolean isBye() {
-    			return true;
-    		}
-    	});
-    	handlers.put("help", new Handler() {
-    		public void doCmd(String word) {
-    			System.out.println("迷路了吗？你可以做的命令有：go bye help");
-    			System.out.println("如：\tgo east");
-    		} 
-    	});
-    	
-        createRooms();
-    }
-
-    private void createRooms()
-    {
-    	Room outside,lobby,pub ,study,bedroom;
-    	
-        //	制造房间
-        outside = new Room("城堡外");
-        lobby = new Room("大堂");
-        pub = new Room("小酒吧");
-        study = new Room("书房");
-        bedroom = new Room("卧室");
-        
-        //	初始化房间的出口
-        outside.setExit("east", lobby);
-        outside.setExit("south", study);
-        outside.setExit("west", pub);
-        lobby.setExit("west", outside);
-        pub.setExit("east", outside);
-        study.setExit("east", bedroom);
-        bedroom.setExit("west", study);
-        lobby.setExit("up", pub);
-        pub.setExit("down", lobby);
-        currentRoom = outside;  //	从城堡门外开始
-    }
-
-    private void printWelcome() {
-        System.out.println();
-        System.out.println("欢迎来到城堡！");
-        System.out.println("这是一个超级无聊的游戏。");
-        System.out.println("如果需要帮助，请输入 'help' 。");
-        System.out.println();
-        showPrompt();
-    }
-
-    // 以下为用户命令
-
-
-
-    private void goRoom(String direction) 
-    {
-        Room nextRoom = currentRoom.getExit(direction);
-        if (nextRoom == null) {
-            System.out.println("那里没有门！");
-        }
-        else {
-            currentRoom = nextRoom;
-            showPrompt();
-        }
-    }
+	private Map map;
+	private Handler handler;
+	private Player player;
+	Scanner in = new Scanner(System.in);
 	
-    public void showPrompt(){
-    	System.out.println("你在" + currentRoom);
-        System.out.print("出口有: ");
-        System.out.print(currentRoom.getExitDesc());
-        System.out.println();
+	public Game(){
+	    player = new Player();
+		this.map = new Map(player);
+    	handler = new Handler(map,player);
+        System.out.println("游戏载入完毕。这是城堡游戏V1.0。");
+        System.out.println("欢迎试玩。");
+	}    
+	
+    public void play() {
+    	//创建玩家
+	    System.out.println("给自己起个名字吧。\n(虽然在这个版本用不上，下个版本就不一定咯)");
+	    String line = in.nextLine();
+	    player.setName(line);
+	    //游戏开始
+    	System.out.println(line + ",你迷路了。"
+      		+ "\n幸运的是，你在天黑之前找到一个城堡。\n是否要进入？(yes/No)");
+    	line = in.nextLine();
+    	
+		if(line.equals("yes"))
+		{  
+    		//游戏主体
+	    	while(true) {
+	    		handler.setCmd(map);
+			    handler.showCmd();
+			    line = in.nextLine();
+			    handler.doCmd(line);
+				if (map.isOutSide()) {
+					System.out.println("你在"+map.getCurrentRoom());
+				    break;
+			    }
+			   
+	    	}
+		}else {
+	        System.out.println("“还是不进去了吧，这个城堡有点奇怪。”\n你这样想着，离开了城堡。");
+	        in.close();
+		}
     }
     
-    public void play() {
-    	Scanner in = new Scanner(System.in);
-    	while ( true ) {
-    		String line = in.nextLine();
-    		String[] words = line.split(" ");
-    		Handler handler = handlers.get(words[0]);
-    		String value = "";
-    		if( words.length > 1)
-    			value = words[1];
-    		if ( handler != null ) {
-    			handler.doCmd(value);
-    			if( handler.isBye()){
-    				break;
-    			}
-    		}
-//    		if ( words[0].equals("help") ) {
-//    			game.printHelp();
-//    		} else if (words[0].equals("go") ) {
-//    			game.goRoom(words[1]);
-//    		} else if ( words[0].equals("bye") ) {
-//    			break;
-//    		}
-    	}
-        in.close();
-    }
 	public static void main(String[] args) {	
 		Game game = new Game();
-		game.printWelcome();
 		game.play();
-        System.out.println("感谢您的光临。再见！");
-
+		System.out.println("谢谢试玩。\ngame over");
 	}
-
+	
 }
